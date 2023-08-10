@@ -42,9 +42,12 @@ Convolutional Neural Networks Explained (CNN Visualized)
 
 Making it Real
 Let's first of all, understand how to deal with the YOLOv8 model.
+```
 pip install ultralytics 
 # !pip install ultralytics for JUPYTER Notebook
+```
 Then:
+```
 from ultralytics import YOLO
 import cv2 #assuming you have opencv installed
 MODEL = "yolov8x.pt" 
@@ -52,8 +55,10 @@ model = YOLO(MODEL) #making an instance of your chosen model
 results = model("people.jpg",show=True) 
 cv2.waitKey(0) # "0" will display the window infinitely until any keypress (in case of videos)
 #waitKey(1) will display a frame for 1 ms
+```
 Results obtained from YOLOv8x versionNow, since you understood the basics, let's go to the true object detection and tracking. (Note that a lot of info. is took from this video, this guy is awesome).
 Object  Tracking
+```
 import cv2
 from ultralytics import YOLO
 import math
@@ -65,7 +70,9 @@ from sort import * #importing all functions from SORT
 
 cap = cv2.VideoCapture("data/los_angeles.mp4")
 model =  YOLO("yolos/yolov8n.pt")
+```
 The cap variable will be the instance of the video that we are using and model, the instance of the YOLOv8 model.
+```
 classes = {0: 'person',
 1: 'bicycle',
 2: 'car', 
@@ -74,7 +81,9 @@ classes = {0: 'person',
 79: 'toothbrush'}
 
 result_array = [classes[i] for i in range(len(classes))]
+```
 Initially, the classes that you get from YOLOv8 API, are float numbers or class id's. Of course, each number has a name class attached to it. It is simpler to make a dict for this and then, if you need, to transform it into array (got to lazy to make it manually).
+```
 l = [593,500,958,500] #line coordinates (explain it later)
 while True:
     _, frame = cap.read() #reading the content of the video by frames
@@ -88,7 +97,9 @@ while True:
             cvzone.cornerRect(frame,(x1,y1,w,h),l=5, rt = 2, colorC=(255,215,0), colorR=(255,99,71))
             conf = math.ceil((box.conf[0]*100))/100 #confidence or accuracy of every bounding box
             cls = int(box.cls[0]) #class id (number)
+```
 That was the part where we detect every object. Now it's time to track and count every car on the road:
+```
 while True:
     _, frame = cap.read()
     results = model(frame,stream=True)
@@ -102,7 +113,9 @@ while True:
     
     tracks = tracker.update(detections) #sending our detections to the tracker func
     cv2.line(frame, (l[0],l[1]),(l[2],l[3]),color=(255,0,0),thickness=3) #line as a threshold
+```
 Now, I will create an array to store all of our detections. Next, I will send this array to the tracker function, where I will extract the unique IDs and bounding box coordinates (which are the same as the previous ones). The important detail is  the cv2.line instance: I am  generating a line using specific coordinates. If cars, identified by  certain IDs, traverse this line, the OVERALL count will increment. In  essence, we are establishing a car counter that operates according to  the car ID.
+```
 for result in tracks:
         x1,y1,x2,y2,id = result
         x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
@@ -117,6 +130,7 @@ for result in tracks:
     m.write(frame)
     cv2.imshow("Image",frame)
     cv2.waitKey(1)
+```
 Now, onto the most interesting aspect: cx and cy are the coordinates for the center of the bounding box. By utilizing these values, we can determine whether the car has crossed the designated line or not (check out the code). If the car has indeed crossed the line, our next step involves verifying whether the ID assigned to this car is unique, thus indicating that the car has not crossed the line previously.
 Results
 
